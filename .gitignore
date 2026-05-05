@@ -1,0 +1,13 @@
+.env
+
+.env
+
+# Go
+backend/server
+backend/*.exe
+backend/uploads/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
