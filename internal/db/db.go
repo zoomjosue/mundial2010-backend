@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"strings"
 
 	_ "database/sql/driver"
 )
@@ -12,14 +14,12 @@ import (
 var DB *sql.DB
 
 func Connect() (*sql.DB, error) {
-	host := getEnv("DB_HOST", "localhost")
-	port := getEnv("DB_PORT", "5432")
-	user := getEnv("DB_USER", "postgres")
-	password := getEnv("DB_PASSWORD", "postgres")
-	dbname := getEnv("DB_NAME", "mundial2010")
-
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn != "" {
+		dsn = withSSLMode(dsn)
+	} else {
+		dsn = buildDSNFromParts()
+	}
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -33,6 +33,32 @@ func Connect() (*sql.DB, error) {
 	log.Println("Connected to PostgreSQL")
 	DB = db
 	return db, nil
+}
+
+func buildDSNFromParts() string {
+	host := getEnv("DB_HOST", "localhost")
+	port := getEnv("DB_PORT", "5432")
+	user := getEnv("DB_USER", "postgres")
+	password := getEnv("DB_PASSWORD", "postgres")
+	dbname := getEnv("DB_NAME", "mundial2010")
+	sslmode := getEnv("DB_SSLMODE", "disable")
+
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		host, port, user, password, dbname, sslmode)
+}
+
+func withSSLMode(dsn string) string {
+	sslmode := os.Getenv("DB_SSLMODE")
+	if sslmode == "" || strings.Contains(dsn, "sslmode=") {
+		return dsn
+	}
+
+	separator := "?"
+	if strings.Contains(dsn, "?") {
+		separator = "&"
+	}
+
+	return dsn + separator + "sslmode=" + url.QueryEscape(sslmode)
 }
 
 func Migrate(db *sql.DB) error {
