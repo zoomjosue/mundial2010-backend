@@ -15,41 +15,33 @@ import (
 )
 
 func main() {
-	// Connect to DB
 	database, err := db.Connect()
 	if err != nil {
 		log.Fatal("Could not connect to database:", err)
 	}
 	defer database.Close()
 
-	// Run migrations
 	if err := db.Migrate(database); err != nil {
 		log.Fatal("Migration failed:", err)
 	}
 
-	// Init handlers
 	seriesH := handlers.NewSeriesHandler(database)
 	ratingsH := handlers.NewRatingsHandler(database)
 
-	// Router
 	mux := http.NewServeMux()
 
-	// Serve uploads statically
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
-	// Serve Swagger UI and spec
 	mux.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs"))))
 	mux.HandleFunc("/swagger", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/docs/swagger-ui.html", http.StatusMovedPermanently)
 	})
 
-	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, `{"status":"ok","message":"Mundial 2010 API running"}`)
 	})
 
-	// Series routes
 	mux.HandleFunc("/series", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -64,7 +56,6 @@ func main() {
 	mux.HandleFunc("/series/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
-		// POST /series/:id/image
 		if strings.HasSuffix(path, "/image") {
 			if r.Method == http.MethodPost {
 				seriesH.UploadImage(w, r)
@@ -74,15 +65,12 @@ func main() {
 			return
 		}
 
-		// /series/:id/rating and /series/:id/rating/:ratingId
 		if strings.Contains(path, "/rating") {
 			parts := strings.Split(strings.Trim(path, "/"), "/")
-			// /series/:id/rating/:ratingId
 			if len(parts) == 4 && r.Method == http.MethodDelete {
 				ratingsH.Delete(w, r)
 				return
 			}
-			// /series/:id/rating
 			switch r.Method {
 			case http.MethodGet:
 				ratingsH.Get(w, r)
@@ -94,7 +82,6 @@ func main() {
 			return
 		}
 
-		// /series/:id
 		switch r.Method {
 		case http.MethodGet:
 			seriesH.GetByID(w, r)
@@ -107,7 +94,6 @@ func main() {
 		}
 	})
 
-	// Apply middleware
 	handler := middleware.CORS(mux)
 
 	port := getEnv("PORT", "8080")
@@ -132,5 +118,4 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-// Needed for db package's sql.Open with postgres driver
 var _ *sql.DB
