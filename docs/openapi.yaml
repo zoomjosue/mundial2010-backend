@@ -1,0 +1,388 @@
+openapi: 3.0.3
+info:
+  title: Mundial 2010 - España API
+  description: |
+    API REST para gestionar documentales y series sobre el Mundial de Sudáfrica 2010,
+    donde España conquistó su primera Copa del Mundo con el legendario gol de Iniesta.
+  version: "1.0.0"
+  contact:
+    name: Lab 6 - Full Stack REST API
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor de desarrollo
+
+tags:
+  - name: series
+    description: Operaciones sobre series/documentales
+  - name: ratings
+    description: Sistema de calificaciones
+
+paths:
+  /series:
+    get:
+      tags: [series]
+      summary: Listar todas las series
+      description: |
+        Retorna una lista paginada de series. Soporta búsqueda por texto, ordenamiento y paginación.
+      parameters:
+        - name: page
+          in: query
+          description: Número de página (default 1)
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Resultados por página (default 10, máximo 100)
+          schema:
+            type: integer
+            default: 10
+        - name: q
+          in: query
+          description: Búsqueda por nombre, descripción o género
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Campo de ordenamiento
+          schema:
+            type: string
+            enum: [id, name, year, genre, created_at]
+            default: id
+        - name: order
+          in: query
+          description: Dirección del ordenamiento
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        "200":
+          description: Lista paginada de series
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSeries'
+
+    post:
+      tags: [series]
+      summary: Crear una nueva serie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SerieInput'
+            example:
+              name: "El Gol de Iniesta"
+              description: "Documental sobre el gol más famoso del fútbol español"
+              genre: "Documental"
+              year: 2010
+              image_url: ""
+      responses:
+        "201":
+          description: Serie creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Serie'
+        "400":
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /series/{id}:
+    get:
+      tags: [series]
+      summary: Obtener una serie por ID
+      parameters:
+        - $ref: '#/components/parameters/SerieId'
+      responses:
+        "200":
+          description: Serie encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Serie'
+        "404":
+          description: Serie no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [series]
+      summary: Actualizar una serie existente
+      parameters:
+        - $ref: '#/components/parameters/SerieId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SerieInput'
+      responses:
+        "200":
+          description: Serie actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Serie'
+        "400":
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Serie no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [series]
+      summary: Eliminar una serie
+      parameters:
+        - $ref: '#/components/parameters/SerieId'
+      responses:
+        "204":
+          description: Serie eliminada exitosamente
+        "404":
+          description: Serie no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /series/{id}/image:
+    post:
+      tags: [series]
+      summary: Subir imagen de portada
+      description: "Sube una imagen para la serie. Máximo 1MB. Formatos aceptados: jpg, jpeg, png, webp, gif."
+      parameters:
+        - $ref: '#/components/parameters/SerieId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Imagen subida exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image_url:
+                    type: string
+                  message:
+                    type: string
+        "400":
+          description: Archivo inválido o muy grande
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Serie no encontrada
+
+  /series/{id}/rating:
+    get:
+      tags: [ratings]
+      summary: Obtener calificaciones de una serie
+      parameters:
+        - $ref: '#/components/parameters/SerieId'
+      responses:
+        "200":
+          description: Resumen de calificaciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingSummary'
+        "404":
+          description: Serie no encontrada
+
+    post:
+      tags: [ratings]
+      summary: Agregar calificación a una serie
+      parameters:
+        - $ref: '#/components/parameters/SerieId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingInput'
+            example:
+              score: 10
+              comment: "El gol de Iniesta en el 116' es historia pura"
+      responses:
+        "201":
+          description: Calificación creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        "400":
+          description: Puntaje inválido (debe ser 1-10)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Serie no encontrada
+
+  /series/{id}/rating/{ratingId}:
+    delete:
+      tags: [ratings]
+      summary: Eliminar una calificación
+      parameters:
+        - $ref: '#/components/parameters/SerieId'
+        - name: ratingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Calificación eliminada
+        "404":
+          description: Calificación no encontrada
+
+components:
+  parameters:
+    SerieId:
+      name: id
+      in: path
+      required: true
+      description: ID de la serie
+      schema:
+        type: integer
+
+  schemas:
+    Serie:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "España Campeona"
+        description:
+          type: string
+          example: "La historia épica del primer Mundial español"
+        genre:
+          type: string
+          example: "Documental"
+        year:
+          type: integer
+          example: 2010
+        image_url:
+          type: string
+          example: "/uploads/1_1234567890.jpg"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SerieInput:
+      type: object
+      required: [name, year]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        genre:
+          type: string
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+        image_url:
+          type: string
+
+    PaginatedSeries:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Serie'
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    Rating:
+      type: object
+      properties:
+        id:
+          type: integer
+        serie_id:
+          type: integer
+        score:
+          type: integer
+          minimum: 1
+          maximum: 10
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    RatingInput:
+      type: object
+      required: [score]
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 10
+        comment:
+          type: string
+
+    RatingSummary:
+      type: object
+      properties:
+        serie_id:
+          type: integer
+        average:
+          type: number
+          format: float
+        count:
+          type: integer
+        ratings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rating'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: string

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mundial 2010 API - Swagger UI</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    body { margin: 0; background: #0a0a1a; }
+    .swagger-ui {
+      color: #f5f7ff;
+    }
+    .swagger-ui .info .title,
+    .swagger-ui .opblock-tag,
+    .swagger-ui .opblock .opblock-summary-path,
+    .swagger-ui .opblock .opblock-summary-path__deprecated,
+    .swagger-ui .opblock .opblock-summary-method,
+    .swagger-ui .tab li,
+    .swagger-ui label,
+    .swagger-ui table thead tr td,
+    .swagger-ui table thead tr th {
+      color: #f5f7ff !important;
+    }
+    .swagger-ui .info .description,
+    .swagger-ui .info p,
+    .swagger-ui .opblock-tag small,
+    .swagger-ui .opblock .opblock-summary-description,
+    .swagger-ui .parameter__name,
+    .swagger-ui .parameter__type,
+    .swagger-ui .response-col_status,
+    .swagger-ui .response-col_description,
+    .swagger-ui .model-title,
+    .swagger-ui .model,
+    .swagger-ui .prop-type,
+    .swagger-ui .prop-format,
+    .swagger-ui .markdown p {
+      color: #d9e2ff !important;
+    }
+    .swagger-ui .opblock,
+    .swagger-ui .model-box,
+    .swagger-ui section.models {
+      background: rgba(255,255,255,0.04) !important;
+    }
+    .swagger-ui .scheme-container {
+      background: #ffffff;
+    }
+    .swagger-ui .info .title small:first-of-type {
+      display: none;
+    }
+    .topbar { background: #c8102e !important; }
+    .topbar-wrapper img { display: none; }
+    .topbar-wrapper::before {
+      content: "Mundial 2010 España API";
+      color: #FFD700;
+      font-size: 1.4rem;
+      font-weight: bold;
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: "/docs/openapi.yaml",
+      dom_id: '#swagger-ui',
+      presets: [SwaggerUIBundle.presets.apis],
+      deepLinking: true,
+    });
+  </script>
+</body>
+</html>
