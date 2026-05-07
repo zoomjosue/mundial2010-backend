@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	_ "database/sql/driver"
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
@@ -41,7 +41,7 @@ func buildDSNFromParts() string {
 	user := getEnv("DB_USER", "postgres")
 	password := getEnv("DB_PASSWORD", "postgres")
 	dbname := getEnv("DB_NAME", "mundial2010")
-	sslmode := getEnv("DB_SSLMODE", "disable")
+	sslmode := getEnv("DB_SSLMODE", "require")
 
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		host, port, user, password, dbname, sslmode)
