@@ -4,6 +4,7 @@
 
 🔗 **Repositorio del frontend:** [mundial2010-frontend](https://github.com/zoomjosue/mundial2010-frontend)
 
+**Link del backend en el servidor corriendo** https://mundial2010-backend.onrender.com/series
 
 > La aplicación permite explorar, crear, editar y calificar documentales y series sobre el Mundial 2010, con paginación, búsqueda, filtros de ordenamiento y subida de imágenes.
 
